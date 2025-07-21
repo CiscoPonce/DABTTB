@@ -83,32 +83,48 @@ def initialize_database():
         
         logger.info("🗄️ Creating database tables...")
 
-        # Video metadata table (must be created first due to foreign key constraints)
+        # Video metadata table
         conn.execute("""
             CREATE TABLE IF NOT EXISTS video_metadata (
                 id INTEGER PRIMARY KEY,
-                filename VARCHAR NOT NULL,
-                duration FLOAT,
-                fps FLOAT,
-                resolution VARCHAR,
+                filename TEXT NOT NULL,
+                duration REAL,
+                fps REAL,
+                resolution TEXT,
                 filesize INTEGER,
-                created_at TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
 
-        # Frame analysis table
+        # Frame analysis table (compatible with analytics endpoints)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS frame_analysis (
                 id INTEGER PRIMARY KEY,
                 video_id INTEGER,
                 frame_number INTEGER,
-                timestamp_seconds FLOAT,
+                timestamp REAL,
                 ball_detected BOOLEAN,
-                ball_confidence FLOAT,
-                ball_x FLOAT,
-                ball_y FLOAT,
-                created_at TIMESTAMP,
-                FOREIGN KEY (video_id) REFERENCES video_metadata(id)
+                confidence REAL,
+                x INTEGER,
+                y INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # Enhanced detections table (for Gemma 3N enhanced results)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS enhanced_detections (
+                id INTEGER PRIMARY KEY,
+                video_id INTEGER,
+                frame_number INTEGER,
+                timestamp REAL,
+                x INTEGER,
+                y INTEGER,
+                confidence REAL,
+                physics_score REAL,
+                context_score REAL,
+                detection_method TEXT DEFAULT 'gemma_enhanced',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
 
@@ -121,8 +137,7 @@ def initialize_database():
                 timestamp_seconds FLOAT,
                 analysis_text TEXT,
                 confidence FLOAT,
-                created_at TIMESTAMP,
-                FOREIGN KEY (video_id) REFERENCES video_metadata(id)
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         
@@ -141,8 +156,7 @@ def initialize_database():
                 surface_type TEXT,
                 physics_score FLOAT,
                 anomaly_detected BOOLEAN,
-                created_at TIMESTAMP,
-                FOREIGN KEY (video_id) REFERENCES video_metadata(id)
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         
@@ -156,8 +170,7 @@ def initialize_database():
                 severity FLOAT,
                 description TEXT,
                 confidence FLOAT,
-                created_at TIMESTAMP,
-                FOREIGN KEY (video_id) REFERENCES video_metadata(id)
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         
@@ -173,16 +186,15 @@ def initialize_database():
                 trajectory_anomalies INTEGER,
                 confidence_anomalies INTEGER,
                 analysis_type TEXT,
-                created_at TIMESTAMP,
-                FOREIGN KEY (video_id) REFERENCES video_metadata(id)
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         
         conn.close()
-        logger.info("✅ Anomaly detection database tables created successfully")
+        logger.info("✅ All database tables created successfully (including enhanced_detections)")
         
     except Exception as e:
-        logger.error(f"❌ Failed to initialize anomaly database tables: {e}")
+        logger.error(f"❌ Failed to initialize database tables: {e}")
         raise
 
 
