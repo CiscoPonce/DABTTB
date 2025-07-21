@@ -1,0 +1,93 @@
+services:
+  # DABTTB AI Service - Advanced Table Tennis Ball Tracking
+  dabttb-ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile.gemma
+    container_name: dabttb-ai-service
+    ports:
+      - "8005:8005"  # DABTTB external port 8005 mapping to internal port 8005
+    volumes:
+      - ./models:/app/model_files:ro  # Mount Gemma model files as read-only
+      - ./ai-service/uploads:/app/uploads
+      - ./ai-service/results:/app/results
+      - ./ai-service/logs:/app/logs
+      - ./local_development:/app/local_development:rw  # Phase 2 & 3 integration files with write access
+    environment:
+      - MODEL_PATH=/app/model_files/gemma-3n-E4B
+      - DEVICE=cuda  # GPU acceleration enabled
+      - DEBUG=true
+      - LOG_LEVEL=INFO
+      - HOST=0.0.0.0
+      - PORT=8005  # DABTTB specific port
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    restart: unless-stopped
+    runtime: nvidia  # Enable NVIDIA GPU runtime
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8005/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - dabttb-network
+    deploy:
+      resources:
+        limits:
+          memory: 12G  # Increased for GPU usage and analytics
+        reservations:
+          memory: 6G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # DABTTB Enhanced Frontend with Analytics Dashboard
+  dabttb-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dabttb-frontend
+    ports:
+      - "3005:80"  # DABTTB specific port
+    depends_on:
+      - dabttb-ai-service
+    environment:
+      - REACT_APP_API_URL=http://localhost:8005
+      - REACT_APP_API_INTERNAL_URL=http://dabttb-ai-service:8005
+    restart: unless-stopped
+    networks:
+      - dabttb-network
+
+  # DABTTB Nginx Reverse Proxy with Analytics Routing
+  dabttb-nginx:
+    image: nginx:alpine
+    container_name: dabttb-nginx
+    ports:
+      - "85:80"  # DABTTB specific port to avoid conflicts
+      - "8443:443"  # DABTTB specific HTTPS port (changed from 445)
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - dabttb-ai-service
+      - dabttb-frontend
+    restart: unless-stopped
+    networks:
+      - dabttb-network
+
+networks:
+  dabttb-network:
+    driver: bridge
+    name: dabttb-network
+
+volumes:
+  dabttb-models:
+    driver: local
+  dabttb-uploads:
+    driver: local
+  dabttb-results:
+    driver: local
+  dabttb-logs:
+    driver: local 

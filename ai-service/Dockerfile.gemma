@@ -1,0 +1,80 @@
+# TTBall_4 Pure Gemma 3N Multimodal Dockerfile with CUDA Support
+# Streamlined for cutting-edge AI showcase with GPU acceleration
+
+FROM python:3.10-slim
+
+# Environment variables for optimal AI performance
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app \
+    PIP_NO_CACHE_DIR=1 \
+    CUDA_LAUNCH_BLOCKING=0
+
+# Install system dependencies - curl for health checks, ffmpeg for video analysis
+RUN apt-get update && apt-get install -y \
+    curl \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create app user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Create directories
+RUN mkdir -p /app/models /app/uploads /app/results /app/logs \
+    && chown -R appuser:appuser /app
+
+# Set working directory
+WORKDIR /app
+
+# Copy enhanced application files with breakthrough detection
+COPY simple_main.py /app/
+COPY integrated_data_quality.py /app/
+COPY core/ /app/core/
+COPY services/ /app/services/
+COPY requirements.txt /app/
+
+# Copy Python models package (not the Gemma model files)
+COPY models/ /app/models/
+
+# Copy the Gemma model files from root models directory
+COPY ../models/ /app/model_files/
+
+# Also copy simple_main.py as fallback
+COPY simple_main.py /app/
+# Copy test files
+COPY test_*.py /app/
+COPY check_anomalies_db.py /app/
+COPY tests/ /app/tests/
+
+
+
+
+# Install Python dependencies with CUDA support
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Create GPU-enabled startup script
+RUN echo '#!/bin/bash' > /app/start.sh && \
+    echo 'set -e' >> /app/start.sh && \
+    echo 'echo "🚀 Starting TTBall_4 Gemma 3N Multimodal AI Service with CUDA"' >> /app/start.sh && \
+    echo 'echo "📱 Device: $DEVICE"' >> /app/start.sh && \
+    echo 'echo "🔧 CUDA Available: $(python -c "import torch; print(torch.cuda.is_available())")"' >> /app/start.sh && \
+    echo 'echo "🎮 GPU Count: $(python -c "import torch; print(torch.cuda.device_count() if torch.cuda.is_available() else 0)")"' >> /app/start.sh && \
+    echo 'if [ "$(python -c "import torch; print(torch.cuda.is_available())")" = "True" ]; then echo "🎯 GPU: $(python -c "import torch; print(torch.cuda.get_device_name(0))")"; fi' >> /app/start.sh && \
+    echo 'echo "🤖 Launching Gemma 3N with GPU acceleration..."' >> /app/start.sh && \
+    echo 'exec uvicorn simple_main:app --host 0.0.0.0 --port 8005 --workers 1' >> /app/start.sh &&     chmod +x /app/start.sh
+
+# Switch to app user
+USER appuser
+
+# Expose port
+EXPOSE 8005
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8005/health || exit 1
+
+# Start the Gemma 3N service
+CMD ["/app/start.sh"] 

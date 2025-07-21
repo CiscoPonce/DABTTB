@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DABTTB AI - Advanced Table Tennis Ball Tracking</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #667eea;
+            background-color: #f7fafc;
+        }
+        .upload-area.dragover {
+            border-color: #667eea;
+            background-color: #ebf4ff;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-robot text-2xl mr-3"></i>
+                    <h1 class="text-2xl font-bold">DABTTB AI - Advanced Table Tennis Ball Tracking</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="statusBadge" class="px-3 py-1 rounded-full text-sm bg-yellow-500">
+                        <i class="fas fa-spinner fa-spin mr-1"></i>
+                        Checking...
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Service Info -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                Service Information
+            </h2>
+            <div id="serviceInfo" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Service info will be populated here -->
+            </div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-cloud-upload-alt text-green-500 mr-2"></i>
+                Video Analysis
+            </h2>
+            
+            <!-- Upload Area - Half Width -->
+            <div class="flex justify-center mb-6">
+                <div class="w-full max-w-2xl">
+                    <div class="upload-area rounded-lg p-8 text-center mb-4" id="uploadArea">
+                        <i class="fas fa-video text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-lg text-gray-600 mb-2">Drop your table tennis video here or click to browse</p>
+                        <p class="text-sm text-gray-500">Supported formats: MP4, AVI, MOV, MKV, WebM</p>
+                        <input type="file" id="fileInput" accept="video/*" class="hidden">
+                        <button onclick="document.getElementById('fileInput').click()" 
+                                class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-folder-open mr-2"></i>
+                            Choose File
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Options - Centered and Simplified -->
+            <div class="flex justify-center mb-4">
+                <div class="w-full max-w-md">
+                    <label class="block text-sm font-medium text-gray-700 mb-2 text-center">Analysis Type</label>
+                    <select id="analysisType" class="w-full border border-gray-300 rounded-md px-3 py-2 text-center">
+                        <option value="gemma-enhanced" selected>Gemma-Enhanced Detection - Physics & AI Validation</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Analyze Button -->
+            <button id="analyzeBtn" 
+                    class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-brain mr-2"></i>
+                Analyze with Gemma 3N
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="bg-white rounded-lg shadow-md p-6 hidden">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-chart-line text-purple-500 mr-2"></i>
+                Analysis Results
+            </h2>
+            <div id="resultsContent">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard Section -->
+        <div id="analyticsSection" class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-semibold flex items-center">
+                    <i class="fas fa-chart-bar text-green-500 mr-3"></i>
+                    Analytics Dashboard
+                </h2>
+                <div class="flex space-x-2">
+                    <button id="refreshAnalyticsBtn" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh
+                    </button>
+                    <button id="exportDataBtn" 
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Analytics Summary Cards -->
+            <div id="analyticsSummary" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Video Statistics Card -->
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Videos Analyzed</h3>
+                            <p id="totalVideos" class="text-3xl font-bold">-</p>
+                            <p id="avgDuration" class="text-sm opacity-90">Avg: - seconds</p>
+                        </div>
+                        <i class="fas fa-video text-4xl opacity-75"></i>
+                    </div>
+                </div>
+
+                <!-- Detection Statistics Card -->
+                <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Ball Detections</h3>
+                            <p id="totalDetections" class="text-3xl font-bold">-</p>
+                            <p id="detectionRate" class="text-sm opacity-90">Rate: -%</p>
+                        </div>
+                        <i class="fas fa-bullseye text-4xl opacity-75"></i>
+                    </div>
+                </div>
+
+                <!-- AI Analysis Card -->
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Gemma 3N Analyses</h3>
+                            <p id="totalAnalyses" class="text-3xl font-bold">-</p>
+                            <p id="avgConfidence" class="text-sm opacity-90">Avg: - confidence</p>
+                        </div>
+                        <i class="fas fa-brain text-4xl opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tabs -->
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="flex space-x-8">
+                    <button id="summaryTab" class="analytics-tab active py-2 px-1 border-b-2 border-blue-500 font-medium text-blue-600">
+                        Summary
+                    </button>
+                    <button id="detectionsTab" class="analytics-tab py-2 px-1 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700">
+                        Detections
+                    </button>
+                    <button id="trajectoryTab" class="analytics-tab py-2 px-1 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700">
+                        Trajectory
+                    </button>
+                    <button id="anomaliesTab" class="analytics-tab py-2 px-1 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        Anomalies
+                    </button>
+                    <button id="gemmaTab" class="analytics-tab py-2 px-1 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700">
+                        Gemma 3N
+                    </button>
+                    <button id="chatTab" class="analytics-tab py-2 px-1 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-comments mr-1"></i>
+                        Chat
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Analytics Content -->
+            <div id="analyticsContent">
+                <!-- Summary Tab Content -->
+                <div id="summaryContent" class="analytics-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="text-lg font-semibold mb-3">Database Overview</h3>
+                            <div id="databaseStats" class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Database Status:</span>
+                                    <span id="dbStatus" class="font-medium text-green-600">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Last Updated:</span>
+                                    <span id="lastUpdated" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Analytics Version:</span>
+                                    <span id="analyticsVersion" class="font-medium">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="text-lg font-semibold mb-3">Performance Metrics</h3>
+                            <div id="performanceStats" class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Avg Resolution:</span>
+                                    <span id="avgResolution" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Avg FPS:</span>
+                                    <span id="avgFps" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Time Range:</span>
+                                    <span id="timeRange" class="font-medium">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detections Tab Content -->
+                <div id="detectionsContent" class="analytics-content hidden">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold mb-3">Ball Detection Data</h3>
+                        <div class="overflow-x-auto">
+                            <table id="detectionsTable" class="min-w-full bg-white border border-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Video</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Frame</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Detected</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Confidence</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Position</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detectionsTableBody">
+                                    <!-- Detection data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trajectory Tab Content -->
+                <div id="trajectoryContent" class="analytics-content hidden">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold mb-3">Ball Trajectory Visualization</h3>
+                        <div id="trajectoryVisualization" class="bg-gray-50 p-4 rounded-lg text-center">
+                            <div class="mb-4">
+                                <label for="trajectoryVideoSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Video for Trajectory Analysis:</label>
+                                <select id="trajectoryVideoSelect" class="w-full max-w-md mx-auto border border-gray-300 rounded-md px-3 py-2">
+                                    <option value="">-- Select a Video --</option>
+                                </select>
+                            </div>
+                            <button id="generateTrajectoryBtn" class="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                                Generate Trajectory
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anomalies Tab Content -->
+                <div id="anomaliesContent" class="analytics-content hidden">
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3 flex items-center">
+                            <i class="fas fa-exclamation-triangle text-orange-500 mr-2"></i>
+                            Anomaly Detection Results
+                        </h3>
+                        
+                        <!-- Anomaly Summary Cards -->
+                        <div id="anomalySummaryCards" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <!-- Total Anomalies Card -->
+                            <div class="bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-sm font-semibold mb-1">Total Anomalies</h4>
+                                        <p id="totalAnomalies" class="text-2xl font-bold">-</p>
+                                    </div>
+                                    <i class="fas fa-exclamation-circle text-2xl opacity-75"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Bounce Events Card -->
+                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-sm font-semibold mb-1">Bounce Events</h4>
+                                        <p id="totalBounces" class="text-2xl font-bold">-</p>
+                                    </div>
+                                    <i class="fas fa-dot-circle text-2xl opacity-75"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Physics Anomalies Card -->
+                            <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-sm font-semibold mb-1">Physics Issues</h4>
+                                        <p id="physicsAnomalies" class="text-2xl font-bold">-</p>
+                                    </div>
+                                    <i class="fas fa-atom text-2xl opacity-75"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Interpolated Frames Card -->
+                            <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-sm font-semibold mb-1">Interpolated</h4>
+                                        <p id="interpolatedFrames" class="text-2xl font-bold">-</p>
+                                    </div>
+                                    <i class="fas fa-magic text-2xl opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Anomaly Details Table -->
+                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h4 class="text-lg font-medium">Anomaly Details</h4>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="anomaliesTable" class="min-w-full">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Video</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Severity</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="anomaliesTableBody" class="bg-white divide-y divide-gray-200">
+                                        <!-- Anomaly data will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gemma 3N Tab Content -->
+                <div id="gemmaContent" class="analytics-content hidden">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold mb-3">Gemma 3N Analysis Results</h3>
+                        <div id="gemmaAnalyses" class="space-y-4">
+                            <!-- Gemma analysis results will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Tab Content -->
+                <div id="chatContent" class="analytics-content hidden">
+                    <div class="bg-white rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">
+                            <i class="fas fa-comments text-blue-500 mr-2"></i>
+                            Chat with Gemma 3N about your videos
+                        </h3>
+                        
+                        <!-- Chat Messages -->
+                        <div id="chatMessages" class="bg-gray-50 rounded-lg p-4 h-64 overflow-y-auto mb-4 space-y-3">
+                            <div class="text-gray-500 text-center text-sm">
+                                <i class="fas fa-robot mr-1"></i>
+                                Ask me anything about your table tennis analysis! I can discuss technique, performance, ball tracking, and more.
+                            </div>
+                        </div>
+                        
+                        <!-- Chat Input -->
+                        <div class="flex space-x-2">
+                            <select id="chatVideoSelect" class="flex-shrink-0 px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">General question</option>
+                            </select>
+                            <input 
+                                type="text" 
+                                id="chatInput" 
+                                placeholder="Ask about your video analysis, technique, or performance..."
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                maxlength="200"
+                            />
+                            <button 
+                                id="sendChatBtn" 
+                                class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-300"
+                                disabled
+                            >
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="mt-2 text-xs text-gray-500">
+                            <i class="fas fa-lightbulb mr-1"></i>
+                            Try asking: "How was my ball detection?" or "What can I improve?" or "Explain my analytics"
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading state for analytics -->
+            <div id="analyticsLoading" class="hidden text-center py-8">
+                <i class="fas fa-spinner fa-spin text-2xl text-blue-500 mb-3"></i>
+                <p class="text-gray-600">Loading analytics data...</p>
+            </div>
+        </div>
+
+        <!-- Loading Section -->
+        <div id="loadingSection" class="bg-white rounded-lg shadow-md p-6 hidden">
+            <div class="text-center">
+                <i class="fas fa-cog fa-spin text-4xl text-blue-500 mb-4"></i>
+                <h3 class="text-lg font-semibold mb-2">Processing Video...</h3>
+                <p id="statusText" class="text-blue-600 font-medium mb-2">📤 Initializing analysis...</p>
+                <p class="text-gray-600">Gemma 3N is analyzing your video. This may take a few moments.</p>
+                <div class="mt-4">
+                    <div class="bg-gray-200 rounded-full h-2 w-full">
+                        <div id="progressBar" class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div class="mt-2 text-sm text-gray-500">
+                        <span id="progressText">Starting analysis...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-16">
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; 2025 DABTTB AI Service - BSc Computer Systems Engineering<br>London South Bank University</p>
+        </div>
+    </footer>
+
+    <script src="app.js?v=20250714"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+# TTBall_4 AI Service Dependencies - Essential Only
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# AI/ML Core (will be installed separately via PyTorch index)
+# torch and torchvision installed via CUDA index in Dockerfile
+ultralytics==8.0.196
+transformers==4.36.0
+accelerate==0.25.0
+
+# Computer Vision
+opencv-python==4.8.1.78
+opencv-contrib-python==4.8.1.78
+Pillow==10.1.0
+
+# Data Processing
+numpy==1.24.3
+pandas==2.1.4
+
+# Visualization (for Phase 3 analytics)
+matplotlib==3.7.3
+
+# Database
+duckdb==0.9.2
+
+# Async/IO
+aiofiles==23.2.0
+python-multipart==0.0.6
+
+# HTTP/API
+requests==2.31.0
+httpx==0.25.2
+websockets==12.0
+
+# System Monitoring
+psutil==5.9.6
+
+# Utilities
+python-dotenv==1.0.0
+click==8.1.7
+rich==13.7.0
+tqdm==4.66.1
+
+# JSON/YAML
+pyyaml==6.0.1
+
+# Logging
+structlog==23.2.0 
