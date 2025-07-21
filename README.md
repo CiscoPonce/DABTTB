@@ -257,13 +257,6 @@ This project is part of a Computer Science degree program at London South Bank U
 **Project Type**: Computer Science Final Year Project  
 **Focus Areas**: Computer Vision, Machine Learning, Data Analysis
 
-## 📞 Contact
-
-**Student**: [Your Name]  
-**University**: London South Bank University  
-**Program**: BSc Computer Systems Engineering  
-**Email**: [Your Email]
-
 ## 🙏 Acknowledgments
 
 - London South Bank University Computer Science Department
